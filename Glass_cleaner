@@ -1,0 +1,93 @@
+#include <Servo.h>
+
+Servo suctionFront;
+Servo suctionBack;
+Servo legLift;
+
+const int SUCTION_FRONT_PIN = 3;
+const int SUCTION_BACK_PIN  = 5;
+const int LEG_LIFT_PIN      = 6;
+
+const int SUCTION_ENGAGED = 90;
+const int SUCTION_RELEASED = 0;
+const int LIFT_UP = 120;
+const int LIFT_DOWN = 30;
+
+const int WIPER1_IN1 = 8;
+const int WIPER1_IN2 = 9;
+const int WIPER2_IN1 = 10;
+const int WIPER2_IN2 = 11;
+
+const int SPRAY_RELAY_PIN = 12;
+
+void setup() {
+  Serial.begin(9600);
+
+  suctionFront.attach(SUCTION_FRONT_PIN);
+  suctionBack.attach(SUCTION_BACK_PIN);
+  legLift.attach(LEG_LIFT_PIN);
+
+  pinMode(WIPER1_IN1, OUTPUT);
+  pinMode(WIPER1_IN2, OUTPUT);
+  pinMode(WIPER2_IN1, OUTPUT);
+  pinMode(WIPER2_IN2, OUTPUT);
+  pinMode(SPRAY_RELAY_PIN, OUTPUT);
+
+  suctionFront.write(SUCTION_ENGAGED);
+  suctionBack.write(SUCTION_ENGAGED);
+  legLift.write(LIFT_DOWN);
+
+  digitalWrite(SPRAY_RELAY_PIN, LOW);
+  stopWipers();
+}
+
+void loop() {
+  climbStep();
+  runCleaningCycle();
+  delay(1000);
+}
+
+void climbStep() {
+  suctionBack.write(SUCTION_RELEASED);
+  delay(300);
+
+  legLift.write(LIFT_UP);
+  delay(500);
+
+  suctionBack.write(SUCTION_ENGAGED);
+  delay(300);
+  suctionFront.write(SUCTION_RELEASED);
+  delay(300);
+
+  legLift.write(LIFT_DOWN);
+  delay(500);
+  suctionFront.write(SUCTION_ENGAGED);
+  delay(300);
+}
+
+void runCleaningCycle() {
+  wiperForward(WIPER1_IN1, WIPER1_IN2);
+  delay(1500);
+  stopWiper(WIPER1_IN1, WIPER1_IN2);
+
+  digitalWrite(SPRAY_RELAY_PIN, HIGH);
+  wiperForward(WIPER2_IN1, WIPER2_IN2);
+  delay(1500);
+  stopWiper(WIPER2_IN1, WIPER2_IN2);
+  digitalWrite(SPRAY_RELAY_PIN, LOW);
+}
+
+void wiperForward(int in1, int in2) {
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+}
+
+void stopWiper(int in1, int in2) {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+}
+
+void stopWipers() {
+  stopWiper(WIPER1_IN1, WIPER1_IN2);
+  stopWiper(WIPER2_IN1, WIPER2_IN2);
+}
